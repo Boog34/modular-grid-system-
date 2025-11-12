@@ -68,9 +68,25 @@
   }
 </style>
 </head>
+
+
+<script>
+function resizeParent() {
+  const height = document.documentElement.scrollHeight;
+  window.parent.postMessage({ frameHeight: height }, "*");
+}
+window.onload = resizeParent;
+window.onresize = resizeParent;
+
+// Re-run after calculation
+setInterval(resizeParent, 300);
+</script>
+
+
+
 <body>
 
-<h1>Baseline Grid Calculator</h1>
+<h1>Modular Grid Calculator</h1>
 <p>Enter your page height in <strong>millimetres</strong>. The calculator converts internally to points (1 mm = 2.83465 pt) so the results lock cleanly to a 12 pt baseline grid.</p>
 
 <h2>Inputs</h2>

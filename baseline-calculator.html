@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baseline Grid Calculator</title>
+<style>
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 40px auto;
+    max-width: 720px;
+    line-height: 1.5;
+    color: #111;
+  }
+  h1, h2 { line-height: 1.2; }
+  label { display: block; margin-top: 1em; }
+  input {
+    padding: 6px 8px;
+    margin-top: 4px;
+    width: 160px;
+    font-size: 14px;
+  }
+  button {
+    margin-top: 16px;
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .output {
+    margin-top: 24px;
+    padding: 16px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+  }
+</style>
+</head>
+<body>
+
+<h1>Baseline Grid Calculator</h1>
+<p>Enter your <b>page height in millimetres</b>. The calculator converts internally to points (1 mm = 2.83465 pt) for accurate baseline alignment.</p>
+
+<h2>Inputs</h2>
+
+<label>Page height (mm):
+  <input type="number" id="pageHeightMM" value="297" step="0.01">
+</label>
+
+<label>Baseline increment (pt):
+  <input type="number" id="baseline" value="12" step="0.01">
+</label>
+
+<label>Number of modules (rows):
+  <input type="number" id="rows" value="6" step="1">
+</label>
+
+<label>Gutter height (pt):
+  <input type="number" id="gutter" value="12" step="0.01">
+</label>
+
+<button id="calcBtn">Calculate</button>
+
+<div class="output" id="output">
+  <p>Enter your values above and click <b>Calculate</b>.</p>
+</div>
+
+<script>
+document.getElementById("calcBtn").addEventListener("click", function() {
+  const mmToPt = 72 / 25.4; // conversion factor
+  const ptToMm = 25.4 / 72;
+
+  const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
+  const B = parseFloat(document.getElementById("baseline").value);
+  const N = parseInt(document.getElementById("rows").value);
+  const G = parseFloat(document.getElementById("gutter").value);
+
+  if (isNaN(H_mm) || isNaN(B) || isNaN(N) || isNaN(G) || N <= 0) {
+    document.getElementById("output").innerHTML = "<p>Please enter valid numeric values.</p>";
+    return;
+  }
+
+  // Convert height from mm to pt
+  const H = H_mm * mmToPt;
+
+  // Baseline-fit formula
+  const k = Math.floor((H - (N - 1) * G) / (N * B));
+  const moduleHeight = k * B;
+  const liveArea = (N * moduleHeight) + ((N - 1) * G);
+  const leftover = H - liveArea;
+
+  // Convert outputs
+  const moduleHeightMM = (moduleHeight * ptToMm).toFixed(2);
+  const leftoverMM = (leftover * ptToMm).toFixed(2);
+  const liveAreaMM = (liveArea * ptToMm).toFixed(2);
+
+  const outputHTML = `
+    <h2>Results</h2>
+    <p><b>Page height:</b> ${H_mm.toFixed(2)} mm (${H.toFixed(2)} pt)</p>
+    <p><b>Baselines per module (k):</b> ${k}</p>
+    <p><b>Module height:</b> ${moduleHeight.toFixed(2)} pt (${moduleHeightMM} mm)</p>
+    <p><b>Live area used:</b> ${liveArea.toFixed(2)} pt (${liveAreaMM} mm)</p>
+    <p><b>Leftover for margins:</b> ${leftover.toFixed(2)} pt (${leftoverMM} mm total)</p>
+    <p><i>Tip:</i> Divide leftover by two for top and bottom margins, or adjust as needed.</p>
+  `;
+
+  document.getElementById("output").innerHTML = outputHTML;
+});
+</script>
+
+</body>
+</html>

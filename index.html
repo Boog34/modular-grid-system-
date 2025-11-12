@@ -4,68 +4,106 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Baseline Grid Calculator</title>
+
 <style>
   body {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    margin: 40px auto;
-    max-width: 720px;
-    line-height: 1.5;
+    font-family: system-ui, -apple-system, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 2rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    background: #ffffff;
     color: #111;
+    line-height: 1.6;
   }
-  h1, h2 { line-height: 1.2; }
-  label { display: block; margin-top: 1em; }
+
+  h1, h2 { line-height: 1.2; margin-top: 0; }
+
+  .field-group {
+    margin-bottom: 1.2rem;
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
   input {
-    padding: 6px 8px;
-    margin-top: 4px;
-    width: 160px;
-    font-size: 14px;
-  }
-  button {
-    margin-top: 16px;
-    padding: 8px 14px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .output {
-    margin-top: 24px;
-    padding: 16px;
+    width: 100%;
+    max-width: 240px;
+    padding: 0.55rem 0.75rem;
+    font-size: 1rem;
     border: 1px solid #ccc;
-    background: #fafafa;
+    border-radius: 4px;
+  }
+
+  button {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #222;
+    color: #fff;
+    margin-top: 0.5rem;
+  }
+
+  .output {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: 6px;
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+  }
+
+  /* Responsive stack */
+  @media (max-width: 600px) {
+    body { padding: 1rem; }
+
+    input {
+      max-width: 100%;
+    }
   }
 </style>
 </head>
 <body>
 
 <h1>Baseline Grid Calculator</h1>
-<p>Enter your <b>page height in millimetres</b>. The calculator converts internally to points (1 mm = 2.83465 pt) for accurate baseline alignment.</p>
+<p>Enter your page height in <strong>millimetres</strong>. The calculator converts internally to points (1 mm = 2.83465 pt) so the results lock cleanly to a 12 pt baseline grid.</p>
 
 <h2>Inputs</h2>
 
-<label>Page height (mm):
+<div class="field-group">
+  <label>Page height (mm)</label>
   <input type="number" id="pageHeightMM" value="297" step="0.01">
-</label>
+</div>
 
-<label>Baseline increment (pt):
+<div class="field-group">
+  <label>Baseline increment (pt)</label>
   <input type="number" id="baseline" value="12" step="0.01">
-</label>
+</div>
 
-<label>Number of modules (rows):
+<div class="field-group">
+  <label>Number of modules (rows)</label>
   <input type="number" id="rows" value="6" step="1">
-</label>
+</div>
 
-<label>Gutter height (pt):
+<div class="field-group">
+  <label>Gutter height (pt)</label>
   <input type="number" id="gutter" value="12" step="0.01">
-</label>
+</div>
 
-<button id="calcBtn">Calculate</button>
+<button onclick="calculate()">Calculate</button>
 
-<div class="output" id="output">
-  <p>Enter your values above and click <b>Calculate</b>.</p>
+<div id="output" class="output">
+  Enter values and click <strong>Calculate</strong>.
 </div>
 
 <script>
-document.getElementById("calcBtn").addEventListener("click", function() {
-  const mmToPt = 72 / 25.4; // conversion factor
+function calculate() {
+  const mmToPt = 72 / 25.4;
   const ptToMm = 25.4 / 72;
 
   const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
@@ -78,32 +116,28 @@ document.getElementById("calcBtn").addEventListener("click", function() {
     return;
   }
 
-  // Convert height from mm to pt
+  // Convert mm → pt
   const H = H_mm * mmToPt;
 
-  // Baseline-fit formula
+  // Baseline grid logic
   const k = Math.floor((H - (N - 1) * G) / (N * B));
   const moduleHeight = k * B;
-  const liveArea = (N * moduleHeight) + ((N - 1) * G);
+  const liveArea = N * moduleHeight + (N - 1) * G;
   const leftover = H - liveArea;
 
-  // Convert outputs
   const moduleHeightMM = (moduleHeight * ptToMm).toFixed(2);
-  const leftoverMM = (leftover * ptToMm).toFixed(2);
   const liveAreaMM = (liveArea * ptToMm).toFixed(2);
+  const leftoverMM = (leftover * ptToMm).toFixed(2);
 
-  const outputHTML = `
+  document.getElementById("output").innerHTML = `
     <h2>Results</h2>
-    <p><b>Page height:</b> ${H_mm.toFixed(2)} mm (${H.toFixed(2)} pt)</p>
-    <p><b>Baselines per module (k):</b> ${k}</p>
-    <p><b>Module height:</b> ${moduleHeight.toFixed(2)} pt (${moduleHeightMM} mm)</p>
-    <p><b>Live area used:</b> ${liveArea.toFixed(2)} pt (${liveAreaMM} mm)</p>
-    <p><b>Leftover for margins:</b> ${leftover.toFixed(2)} pt (${leftoverMM} mm total)</p>
-    <p><i>Tip:</i> Divide leftover by two for top and bottom margins, or adjust as needed.</p>
+    <p><strong>Baselines per module (k):</strong> ${k}</p>
+    <p><strong>Module height:</strong> ${moduleHeight.toFixed(2)} pt (${moduleHeightMM} mm)</p>
+    <p><strong>Live area used:</strong> ${liveArea.toFixed(2)} pt (${liveAreaMM} mm)</p>
+    <p><strong>Leftover for margins:</strong> ${leftover.toFixed(2)} pt (${leftoverMM} mm total)</p>
+    <p style="margin-top:1rem;"><em>Tip:</em> Divide leftover by two for top and bottom margins, or split however your layout requires.</p>
   `;
-
-  document.getElementById("output").innerHTML = outputHTML;
-});
+}
 </script>
 
 </body>

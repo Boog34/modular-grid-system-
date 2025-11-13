@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Baseline & Square Grid Calculator</title>
+<title>Modular Grid Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -20,7 +20,9 @@
 
   h1, h2 { margin-top: 0; }
 
-  .field-group { margin-bottom: 1.2rem; }
+  .field-group {
+    margin-bottom: 1.2rem;
+  }
 
   label {
     display: block;
@@ -72,16 +74,18 @@
 <body>
 
 <h1>Modular Grid Calculator</h1>
-<p>Select the grid mode you’d like to calculate.</p>
+<p>Select a mode to calculate the structure of your grid.</p>
 
+<!-- MODE SELECTOR -->
 <div class="mode-switch">
   <label><input type="radio" name="mode" value="baseline" checked> Baseline Grid Mode</label>
   <label><input type="radio" name="mode" value="square"> Square Module Mode</label>
 </div>
 
-<!-- BASELINE MODE -->
+<!-- BASELINE GRID MODE -->
 <div id="baselineSection">
   <h2>Baseline Grid Inputs</h2>
+
   <div class="field-group">
     <label>Page height (mm)</label>
     <input type="number" id="pageHeightMM" value="297" step="0.01">
@@ -103,7 +107,7 @@
   </div>
 </div>
 
-<!-- SQUARE MODE -->
+<!-- SQUARE MODULE MODE -->
 <div id="squareSection" style="display:none;">
   <h2>Square Modules Inputs</h2>
 
@@ -115,6 +119,11 @@
   <div class="field-group">
     <label>Page height (mm)</label>
     <input type="number" id="pageHeightSquareMM" value="297" step="0.01">
+  </div>
+
+  <div class="field-group">
+    <label>Margin (mm)</label>
+    <input type="number" id="marginMM" value="10" step="0.01">
   </div>
 
   <div class="field-group">
@@ -140,6 +149,7 @@
 </div>
 
 <script>
+// Toggle mode UI
 document.querySelectorAll("input[name='mode']").forEach(radio => {
   radio.addEventListener("change", () => {
     const mode = document.querySelector("input[name='mode']:checked").value;
@@ -160,7 +170,9 @@ function calculate() {
 
   const mmToPt = 72 / 25.4;
   const ptToMm = 25.4 / 72;
+  const gutterPtToMm = 0.352778;
 
+  /* ------------------------------ BASELINE MODE ------------------------------- */
   if (mode === "baseline") {
     const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
     const B = parseFloat(document.getElementById("baseline").value);
@@ -184,29 +196,39 @@ function calculate() {
     document.getElementById("output").innerHTML = outputHTML;
   }
 
+  /* ------------------------------ SQUARE MODE ------------------------------- */
   if (mode === "square") {
     const W_mm = parseFloat(document.getElementById("pageWidthMM").value);
     const H_mm = parseFloat(document.getElementById("pageHeightSquareMM").value);
+    const M_mm = parseFloat(document.getElementById("marginMM").value);
     const C = parseInt(document.getElementById("columns").value);
     const R = parseInt(document.getElementById("rowsSquare").value);
-    const G = parseFloat(document.getElementById("gutterSquare").value);
+    const G_pt = parseFloat(document.getElementById("gutterSquare").value);
 
-    const W = W_mm * mmToPt;
-    const H = H_mm * mmToPt;
+    const gutterMM = G_pt * gutterPtToMm;
 
-    const moduleWidth = (W - (C - 1) * G) / C;
-    const moduleHeight = moduleWidth;
-    const requiredHeight = (R * moduleHeight) + ((R - 1) * G);
+    const W_live = W_mm - 2 * M_mm;
+    const H_live = H_mm - 2 * M_mm;
 
-    const fits = requiredHeight <= H ? "✔ Fits vertically" : "✖ Does NOT fit vertically";
+    const moduleWidthMM = (W_live - (C - 1) * gutterMM) / C;
+    const moduleHeightMM = moduleWidthMM;
+
+    const requiredHeightMM =
+      (R * moduleHeightMM) + ((R - 1) * gutterMM);
+
+    const fits = requiredHeightMM <= H_live
+      ? "✔ Fits inside margins"
+      : "✖ Does NOT fit (grid too tall for live area)";
 
     const outputHTML = `
       <h2>Square Modules Results</h2>
-      <p><strong>Module width / height:</strong> ${moduleWidth.toFixed(2)} pt (${(moduleWidth * ptToMm).toFixed(2)} mm)</p>
-      <p><strong>Required height:</strong> ${requiredHeight.toFixed(2)} pt (${(requiredHeight * ptToMm).toFixed(2)} mm)</p>
-      <p><strong>Page height:</strong> ${H.toFixed(2)} pt (${H_mm} mm)</p>
+      <p><strong>Live area:</strong> ${W_live.toFixed(2)} × ${H_live.toFixed(2)} mm</p>
+      <p><strong>Module width:</strong> ${moduleWidthMM.toFixed(2)} mm (${(moduleWidthMM * mmToPt).toFixed(2)} pt)</p>
+      <p><strong>Module height:</strong> ${moduleHeightMM.toFixed(2)} mm (${(moduleHeightMM * mmToPt).toFixed(2)} pt)</p>
+      <p><strong>Required height for ${R} rows:</strong> ${requiredHeightMM.toFixed(2)} mm</p>
       <p><strong>Status:</strong> ${fits}</p>
     `;
+
     document.getElementById("output").innerHTML = outputHTML;
   }
 }

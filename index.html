@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Modular Grid Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baseline Grid Calculator</title>
 
 <style>
   body {
     font-family: system-ui, -apple-system, Helvetica, Arial, sans-serif;
-    margin: 0;
+    margin: 0px;
     padding: 2rem;
-    max-width: 900px;
+    max-width: 800px;
     margin-left: auto;
     margin-right: auto;
     background: #ffffff;
@@ -18,7 +18,7 @@
     line-height: 1.6;
   }
 
-  h1, h2, h3 { margin-top: 0; }
+  h1, h2 { line-height: 1.2; margin-top: 0; }
 
   .field-group {
     margin-bottom: 1.2rem;
@@ -32,37 +32,22 @@
 
   input {
     width: 100%;
-    max-width: 260px;
+    max-width: 240px;
     padding: 0.55rem 0.75rem;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box;
   }
 
-  button, .preset-btn, .toggle-btn {
-    cursor: pointer;
+  button {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
     border: none;
-    padding: 0.5rem 1rem;
     border-radius: 4px;
-    font-size: 0.95rem;
-  }
-
-  .preset-btn {
-    background: #eee;
-    margin-right: 0.4rem;
-    margin-bottom: 0.4rem;
-  }
-  .preset-btn:hover { background: #ddd; }
-
-  .toggle-group { margin-top: 0.7rem; }
-  .toggle-btn {
-    background: #eee;
-    margin-right: 0.3rem;
-  }
-  .toggle-btn.active {
+    cursor: pointer;
     background: #222;
     color: #fff;
+    margin-top: 0.5rem;
   }
 
   .output {
@@ -73,158 +58,64 @@
     border: 1px solid #ddd;
   }
 
-  .mode-switch { margin-bottom: 1.5rem; margin-top: 1.5rem; }
-
-  .row {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-  }
-
+  /* Responsive stack */
   @media (max-width: 600px) {
-    body { padding: 1.25rem 1.75rem 1.25rem 1.5rem; }
-    .output { padding: 1.25rem; }
-    input { max-width: 100%; }
-    .row { flex-direction: column; gap: 0; }
+  body { 
+    padding: 1.25rem 1.75rem 1.25rem 1.5rem;
+    /*   top   right   bottom   left    */
+  }
+  .output {
+    padding: 1.25rem;
+  }
+  input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
   }
 </style>
-
 </head>
+
+
+<script>
+function resizeParent() {
+  const height = document.documentElement.scrollHeight;
+  window.parent.postMessage({ frameHeight: height }, "*");
+}
+window.onload = resizeParent;
+window.onresize = resizeParent;
+
+// Re-run after calculation
+setInterval(resizeParent, 300);
+</script>
+
+
+
 <body>
 
 <h1>Modular Grid Calculator</h1>
-<p>A margin-first calculator for Baseline grids, Square modules, and Row-based modular grids.</p>
+<p>Enter your page height in <strong>millimetres</strong>. The calculator converts internally to points (1 mm = 2.83465 pt) so the results lock cleanly to a 12 pt baseline grid.</p>
 
-<!-- ==================== PAGE SIZE PRESETS ==================== -->
-<h2>1. Page Size</h2>
+<h2>Inputs</h2>
 
-<div>
-  <button class="preset-btn" onclick="applyPreset('A0')">A0</button>
-  <button class="preset-btn" onclick="applyPreset('A1')">A1</button>
-  <button class="preset-btn" onclick="applyPreset('A2')">A2</button>
-  <button class="preset-btn" onclick="applyPreset('A3')">A3</button>
-  <button class="preset-btn" onclick="applyPreset('A4')">A4</button>
-  <button class="preset-btn" onclick="applyPreset('A5')">A5</button>
-  <button class="preset-btn" onclick="applyPreset('A6')">A6</button>
+<div class="field-group">
+  <label>Page height (mm)</label>
+  <input type="number" id="pageHeightMM" value="297" step="0.01">
 </div>
 
-<div class="toggle-group">
-  <button id="portraitBtn" class="toggle-btn active" onclick="setOrientation('portrait')">Portrait</button>
-  <button id="landscapeBtn" class="toggle-btn" onclick="setOrientation('landscape')">Landscape</button>
+<div class="field-group">
+  <label>Baseline increment (pt)</label>
+  <input type="number" id="baseline" value="12" step="0.01">
 </div>
 
-<div class="row">
-  <div class="field-group">
-    <label>Page width (mm)</label>
-    <input type="number" id="pageWidthMM" value="210" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Page height (mm)</label>
-    <input type="number" id="pageHeightMM" value="297" step="0.01">
-  </div>
+<div class="field-group">
+  <label>Number of modules (rows)</label>
+  <input type="number" id="rows" value="6" step="1">
 </div>
 
-<!-- ==================== MARGINS ==================== -->
-<h2>2. Margins</h2>
-
-<div class="row">
-  <div class="field-group">
-    <label>Top (mm)</label>
-    <input type="number" id="marginTop" value="10" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Bottom (mm)</label>
-    <input type="number" id="marginBottom" value="10" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Inside (mm)</label>
-    <input type="number" id="marginInside" value="10" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Outside (mm)</label>
-    <input type="number" id="marginOutside" value="10" step="0.01">
-  </div>
-</div>
-
-<div id="activeArea" class="output">
-  Active area will be calculated when you click <strong>Calculate</strong>.
-</div>
-
-<!-- ==================== MODE ==================== -->
-<h2>3. Select Grid Mode</h2>
-<div class="mode-switch">
-  <label><input type="radio" name="mode" value="baseline" checked> Baseline Grid</label>
-  <label><input type="radio" name="mode" value="square"> Square Modules</label>
-  <label><input type="radio" name="mode" value="rowbased"> Row-Based Modular Grid</label>
-</div>
-
-
-<!-- ==================== BASELINE GRID MODE ==================== -->
-<div id="baselineSection">
-  <h3>Baseline Grid Inputs</h3>
-
-  <div class="field-group">
-    <label>Baseline increment (pt)</label>
-    <input type="number" id="baseline" value="12" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Modules (rows)</label>
-    <input type="number" id="rowsBaseline" value="6" step="1">
-  </div>
-
-  <div class="field-group">
-    <label>Gutter (pt)</label>
-    <input type="number" id="gutterBaseline" value="12" step="0.01">
-  </div>
-</div>
-
-
-<!-- ==================== SQUARE GRID MODE ==================== -->
-<div id="squareSection" style="display:none;">
-  <h3>Square Module Inputs</h3>
-
-  <div class="field-group">
-    <label>Columns (C)</label>
-    <input type="number" id="columns" value="6" step="1">
-  </div>
-
-  <div class="field-group">
-    <label>Rows (R)</label>
-    <input type="number" id="rowsSquare" value="8" step="1">
-  </div>
-
-  <div class="field-group">
-    <label>Gutter (pt)</label>
-    <input type="number" id="gutterSquare" value="12" step="0.01">
-  </div>
-
-  <button onclick="setMaxRows()">Max Rows That Fit</button>
-</div>
-
-
-<!-- ==================== ROW-BASED MODULAR GRID MODE ==================== -->
-<div id="rowBasedSection" style="display:none;">
-  <h3>Row-Based Modular Grid Inputs</h3>
-
-  <div class="field-group">
-    <label>Module height (pt)</label>
-    <input type="number" id="rowModulePt" value="36" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Gutter height (pt)</label>
-    <input type="number" id="rowGutterPt" value="12" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Baseline increment (pt) <span style="color:#888">(optional)</span></label>
-    <input type="number" id="rowBaselinePt" value="12" step="0.01">
-  </div>
+<div class="field-group">
+  <label>Gutter height (pt)</label>
+  <input type="number" id="gutter" value="12" step="0.01">
 </div>
 
 <button onclick="calculate()">Calculate</button>
@@ -233,220 +124,43 @@
   Enter values and click <strong>Calculate</strong>.
 </div>
 
-
 <script>
-/* --------------------------------------------------------------------------
-   ISO PAGE PRESETS & ORIENTATION
--------------------------------------------------------------------------- */
-
-const A_SIZES = {
-  A0: { w: 841, h: 1189 },
-  A1: { w: 594, h: 841 },
-  A2: { w: 420, h: 594 },
-  A3: { w: 297, h: 420 },
-  A4: { w: 210, h: 297 },
-  A5: { w: 148, h: 210 },
-  A6: { w: 105, h: 148 },
-};
-
-let currentOrientation = "portrait";
-
-function applyPreset(size) {
-  const s = A_SIZES[size];
-
-  if (currentOrientation === "portrait") {
-    document.getElementById("pageWidthMM").value = s.w;
-    document.getElementById("pageHeightMM").value = s.h;
-  } else {
-    document.getElementById("pageWidthMM").value = s.h;
-    document.getElementById("pageHeightMM").value = s.w;
-  }
-}
-
-function setOrientation(orientation) {
-  currentOrientation = orientation;
-
-  document.getElementById("portraitBtn").classList.toggle("active", orientation === "portrait");
-  document.getElementById("landscapeBtn").classList.toggle("active", orientation === "landscape");
-
-  const w = document.getElementById("pageWidthMM").value;
-  const h = document.getElementById("pageHeightMM").value;
-  document.getElementById("pageWidthMM").value = h;
-  document.getElementById("pageHeightMM").value = w;
-}
-
-
-/* --------------------------------------------------------------------------
-   MODE SWITCHING
--------------------------------------------------------------------------- */
-
-document.querySelectorAll("input[name='mode']").forEach(radio => {
-  radio.addEventListener("change", () => {
-    const mode = document.querySelector("input[name='mode']:checked").value;
-
-    document.getElementById("baselineSection").style.display =
-      mode === "baseline" ? "block" : "none";
-
-    document.getElementById("squareSection").style.display =
-      mode === "square" ? "block" : "none";
-
-    document.getElementById("rowBasedSection").style.display =
-      mode === "rowbased" ? "block" : "none";
-  });
-});
-
-
-/* --------------------------------------------------------------------------
-   MAIN CALCULATOR
--------------------------------------------------------------------------- */
-
 function calculate() {
   const mmToPt = 72 / 25.4;
   const ptToMm = 25.4 / 72;
-  const ptToMM = 0.352778;
 
-  // Page + margins
-  const W_mm = parseFloat(document.getElementById("pageWidthMM").value);
   const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
+  const B = parseFloat(document.getElementById("baseline").value);
+  const N = parseInt(document.getElementById("rows").value);
+  const G = parseFloat(document.getElementById("gutter").value);
 
-  const M_top = parseFloat(document.getElementById("marginTop").value);
-  const M_bottom = parseFloat(document.getElementById("marginBottom").value);
-  const M_inside = parseFloat(document.getElementById("marginInside").value);
-  const M_outside = parseFloat(document.getElementById("marginOutside").value);
+  if (isNaN(H_mm) || isNaN(B) || isNaN(N) || isNaN(G) || N <= 0) {
+    document.getElementById("output").innerHTML = "<p>Please enter valid numeric values.</p>";
+    return;
+  }
 
-  const H_active = H_mm - (M_top + M_bottom);
-  const W_active = W_mm - (M_inside + M_outside);
+  // Convert mm → pt
+  const H = H_mm * mmToPt;
 
-  document.getElementById("activeArea").innerHTML = `
-    <strong>Active width:</strong> ${W_active.toFixed(2)} mm<br>
-    <strong>Active height:</strong> ${H_active.toFixed(2)} mm
+  // Baseline grid logic
+  const k = Math.floor((H - (N - 1) * G) / (N * B));
+  const moduleHeight = k * B;
+  const liveArea = N * moduleHeight + (N - 1) * G;
+  const leftover = H - liveArea;
+
+  const moduleHeightMM = (moduleHeight * ptToMm).toFixed(2);
+  const liveAreaMM = (liveArea * ptToMm).toFixed(2);
+  const leftoverMM = (leftover * ptToMm).toFixed(2);
+
+  document.getElementById("output").innerHTML = `
+    <h2>Results</h2>
+    <p><strong>Baselines per module (k):</strong> ${k}</p>
+    <p><strong>Module height:</strong> ${moduleHeight.toFixed(2)} pt (${moduleHeightMM} mm)</p>
+    <p><strong>Live area used:</strong> ${liveArea.toFixed(2)} pt (${liveAreaMM} mm)</p>
+    <p><strong>Leftover for margins:</strong> ${leftover.toFixed(2)} pt (${leftoverMM} mm total)</p>
+    <p style="margin-top:1rem;"><em>Tip:</em> Divide leftover by two for top and bottom margins, or split however your layout requires.</p>
   `;
-
-  const mode = document.querySelector("input[name='mode']:checked").value;
-
-
-  /* ===================== BASELINE GRID MODE ===================== */
-
-  if (mode === "baseline") {
-
-    const baseline = parseFloat(document.getElementById("baseline").value);
-    const rows = parseInt(document.getElementById("rowsBaseline").value);
-    const gutterPt = parseFloat(document.getElementById("gutterBaseline").value);
-
-    const H_pt = H_active * mmToPt;
-
-    const k = Math.floor((H_pt - (rows - 1) * gutterPt) / (rows * baseline));
-    const modulePt = k * baseline;
-
-    const usedPt = rows * modulePt + (rows - 1) * gutterPt;
-    const leftoverPt = H_pt - usedPt;
-
-    document.getElementById("output").innerHTML = `
-      <h2>Baseline Grid Results</h2>
-      <p><strong>Baselines per module:</strong> ${k}</p>
-      <p><strong>Module height:</strong> ${modulePt.toFixed(2)} pt (${(modulePt * ptToMm).toFixed(2)} mm)</p>
-      <p><strong>Used height:</strong> ${usedPt.toFixed(2)} pt (${(usedPt * ptToMm).toFixed(2)} mm)</p>
-      <p><strong>Leftover:</strong> ${leftoverPt.toFixed(2)} pt (${(leftoverPt * ptToMm).toFixed(2)} mm)</p>
-    `;
-  }
-
-
-  /* ===================== SQUARE GRID MODE ===================== */
-
-  if (mode === "square") {
-    const columns = parseInt(document.getElementById("columns").value);
-    const rows = parseInt(document.getElementById("rowsSquare").value);
-    const gutterPt = parseFloat(document.getElementById("gutterSquare").value);
-
-    const gutterMM = gutterPt * ptToMM;
-
-    const moduleW = (W_active - (columns - 1) * gutterMM) / columns;
-    const moduleH = moduleW;
-
-    const requiredHeight = rows * moduleH + (rows - 1) * gutterMM;
-
-    const fits = requiredHeight <= H_active
-      ? "✔ Fits within the active area"
-      : "✖ Too tall — reduce rows or margins";
-
-    document.getElementById("output").innerHTML = `
-      <h2>Square Grid Results</h2>
-      <p><strong>Module width/height:</strong> ${moduleW.toFixed(2)} mm (${(moduleW * mmToPt).toFixed(2)} pt)</p>
-      <p><strong>Required height:</strong> ${requiredHeight.toFixed(2)} mm</p>
-      <p><strong>Active height:</strong> ${H_active.toFixed(2)} mm</p>
-      <p><strong>Status:</strong> ${fits}</p>
-    `;
-  }
-
-
-  /* ===================== ROW-BASED MODULAR GRID MODE ===================== */
-
-  if (mode === "rowbased") {
-
-    const modulePt = parseFloat(document.getElementById("rowModulePt").value);
-    const gutterPt = parseFloat(document.getElementById("rowGutterPt").value);
-    const baselinePt = parseFloat(document.getElementById("rowBaselinePt").value);
-
-    const moduleMM = modulePt * ptToMm;
-    const gutterMM = gutterPt * ptToMm;
-
-    const totalUnit = moduleMM + gutterMM;
-
-    const rowsFit = Math.floor((H_active + gutterMM) / totalUnit);
-    const usedMM = rowsFit * moduleMM + (rowsFit - 1) * gutterMM;
-    const leftoverMM = H_active - usedMM;
-
-    const aligned =
-      modulePt % baselinePt === 0
-      ? "✔ Module height aligns with baseline grid"
-      : "✖ Module height does not align to baseline grid";
-
-    document.getElementById("output").innerHTML = `
-      <h2>Row-Based Grid Results</h2>
-      <p><strong>Module height:</strong> ${modulePt.toFixed(2)} pt (${moduleMM.toFixed(2)} mm)</p>
-      <p><strong>Gutter:</strong> ${gutterPt.toFixed(2)} pt (${gutterMM.toFixed(2)} mm)</p>
-      <p><strong>Rows that fit:</strong> ${rowsFit}</p>
-      <p><strong>Used height:</strong> ${usedMM.toFixed(2)} mm</p>
-      <p><strong>Leftover:</strong> ${leftoverMM.toFixed(2)} mm</p>
-      <p><strong>Baseline alignment:</strong> ${aligned}</p>
-    `;
-  }
-
 }
-
-
-/* --------------------------------------------------------------------------
-   MAX ROWS FOR SQUARE MODE
--------------------------------------------------------------------------- */
-
-function setMaxRows() {
-  const ptToMM = 0.352778;
-
-  const W_mm = parseFloat(document.getElementById("pageWidthMM").value);
-  const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
-
-  const M_top = parseFloat(document.getElementById("marginTop").value);
-  const M_bottom = parseFloat(document.getElementById("marginBottom").value);
-  const M_inside = parseFloat(document.getElementById("marginInside").value);
-  const M_outside = parseFloat(document.getElementById("marginOutside").value);
-
-  const W_active = W_mm - (M_inside + M_outside);
-  const H_active = H_mm - (M_top + M_bottom);
-
-  const columns = parseInt(document.getElementById("columns").value);
-  const gutterPt = parseFloat(document.getElementById("gutterSquare").value);
-
-  const gutterMM = gutterPt * ptToMM;
-
-  const moduleW = (W_active - (columns - 1) * gutterMM) / columns;
-  const moduleH = moduleW;
-
-  const maxRows = Math.floor((H_active + gutterMM) / (moduleH + gutterMM));
-
-  document.getElementById("rowsSquare").value = maxRows;
-  calculate();
-}
-
 </script>
 
 </body>

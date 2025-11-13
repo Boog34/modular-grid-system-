@@ -10,7 +10,7 @@
     font-family: system-ui, -apple-system, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 2rem;
-    max-width: 800px;
+    max-width: 900px;
     margin-left: auto;
     margin-right: auto;
     background: #ffffff;
@@ -18,7 +18,7 @@
     line-height: 1.6;
   }
 
-  h1, h2 { margin-top: 0; }
+  h1, h2, h3 { margin-top: 0; }
 
   .field-group {
     margin-bottom: 1.2rem;
@@ -32,7 +32,7 @@
 
   input {
     width: 100%;
-    max-width: 240px;
+    max-width: 260px;
     padding: 0.55rem 0.75rem;
     font-size: 1rem;
     border: 1px solid #ccc;
@@ -40,15 +40,36 @@
     box-sizing: border-box;
   }
 
-  button {
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 4px;
+  button, .preset-btn, .toggle-btn {
     cursor: pointer;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+  }
+
+  .preset-btn {
+    background: #eee;
+    margin-right: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .preset-btn:hover {
+    background: #ddd;
+  }
+
+  .toggle-group {
+    margin-top: 0.7rem;
+  }
+
+  .toggle-btn {
+    background: #eee;
+    margin-right: 0.3rem;
+  }
+
+  .toggle-btn.active {
     background: #222;
     color: #fff;
-    margin-top: 0.5rem;
   }
 
   .output {
@@ -61,12 +82,20 @@
 
   .mode-switch {
     margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .row {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
   }
 
   @media (max-width: 600px) {
     body { padding: 1.25rem 1.75rem 1.25rem 1.5rem; }
     .output { padding: 1.25rem; }
     input { max-width: 100%; }
+    .row { flex-direction: column; gap: 0; }
   }
 </style>
 
@@ -74,43 +103,27 @@
 <body>
 
 <h1>Modular Grid Calculator</h1>
-<p>Select a mode to calculate the structure of your grid.</p>
+<p>A margin-first calculator for Baseline and Square modular grids. Includes ISO page presets and automatic fit tools.</p>
 
-<!-- MODE SELECTOR -->
-<div class="mode-switch">
-  <label><input type="radio" name="mode" value="baseline" checked> Baseline Grid Mode</label>
-  <label><input type="radio" name="mode" value="square"> Square Module Mode</label>
+<!-- ==================== PAGE SIZE PRESETS ==================== -->
+<h2>1. Page Size</h2>
+
+<div>
+  <button class="preset-btn" onclick="applyPreset('A0')">A0</button>
+  <button class="preset-btn" onclick="applyPreset('A1')">A1</button>
+  <button class="preset-btn" onclick="applyPreset('A2')">A2</button>
+  <button class="preset-btn" onclick="applyPreset('A3')">A3</button>
+  <button class="preset-btn" onclick="applyPreset('A4')">A4</button>
+  <button class="preset-btn" onclick="applyPreset('A5')">A5</button>
+  <button class="preset-btn" onclick="applyPreset('A6')">A6</button>
 </div>
 
-<!-- BASELINE GRID MODE -->
-<div id="baselineSection">
-  <h2>Baseline Grid Inputs</h2>
-
-  <div class="field-group">
-    <label>Page height (mm)</label>
-    <input type="number" id="pageHeightMM" value="297" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Baseline increment (pt)</label>
-    <input type="number" id="baseline" value="12" step="0.01">
-  </div>
-
-  <div class="field-group">
-    <label>Number of modules (rows)</label>
-    <input type="number" id="rows" value="6" step="1">
-  </div>
-
-  <div class="field-group">
-    <label>Gutter height (pt)</label>
-    <input type="number" id="gutter" value="12" step="0.01">
-  </div>
+<div class="toggle-group">
+  <button id="portraitBtn" class="toggle-btn active" onclick="setOrientation('portrait')">Portrait</button>
+  <button id="landscapeBtn" class="toggle-btn" onclick="setOrientation('landscape')">Landscape</button>
 </div>
 
-<!-- SQUARE MODULE MODE -->
-<div id="squareSection" style="display:none;">
-  <h2>Square Modules Inputs</h2>
-
+<div class="row">
   <div class="field-group">
     <label>Page width (mm)</label>
     <input type="number" id="pageWidthMM" value="210" step="0.01">
@@ -118,13 +131,71 @@
 
   <div class="field-group">
     <label>Page height (mm)</label>
-    <input type="number" id="pageHeightSquareMM" value="297" step="0.01">
+    <input type="number" id="pageHeightMM" value="297" step="0.01">
+  </div>
+</div>
+
+<!-- ==================== MARGINS ==================== -->
+<h2>2. Margins</h2>
+
+<div class="row">
+  <div class="field-group">
+    <label>Top (mm)</label>
+    <input type="number" id="marginTop" value="10" step="0.01">
   </div>
 
   <div class="field-group">
-    <label>Margin (mm)</label>
-    <input type="number" id="marginMM" value="10" step="0.01">
+    <label>Bottom (mm)</label>
+    <input type="number" id="marginBottom" value="10" step="0.01">
   </div>
+
+  <div class="field-group">
+    <label>Inside (mm)</label>
+    <input type="number" id="marginInside" value="10" step="0.01">
+  </div>
+
+  <div class="field-group">
+    <label>Outside (mm)</label>
+    <input type="number" id="marginOutside" value="10" step="0.01">
+  </div>
+</div>
+
+<div id="activeArea" class="output">
+  Active area will be calculated when you click <strong>Calculate</strong>.
+</div>
+
+<!-- ==================== MODE ==================== -->
+<h2>3. Select Grid Mode</h2>
+<div class="mode-switch">
+  <label><input type="radio" name="mode" value="baseline" checked> Baseline Grid</label>
+  <label><input type="radio" name="mode" value="square"> Square Modules</label>
+</div>
+
+
+<!-- ==================== BASELINE ==================== -->
+<div id="baselineSection">
+  <h3>Baseline Grid Inputs</h3>
+
+  <div class="field-group">
+    <label>Baseline increment (pt)</label>
+    <input type="number" id="baseline" value="12" step="0.01">
+  </div>
+
+  <div class="field-group">
+    <label>Modules (rows)</label>
+    <input type="number" id="rowsBaseline" value="6" step="1">
+  </div>
+
+  <div class="field-group">
+    <label>Gutter (pt)</label>
+    <input type="number" id="gutterBaseline" value="12" step="0.01">
+  </div>
+</div>
+
+
+<!-- ==================== SQUARE GRID ==================== -->
+<div id="squareSection" style="display:none;">
+  <h3>Square Module Inputs</h3>
 
   <div class="field-group">
     <label>Columns (C)</label>
@@ -140,6 +211,8 @@
     <label>Gutter (pt)</label>
     <input type="number" id="gutterSquare" value="12" step="0.01">
   </div>
+
+  <button onclick="setMaxRows()">Max Rows That Fit</button>
 </div>
 
 <button onclick="calculate()">Calculate</button>
@@ -148,90 +221,184 @@
   Enter values and click <strong>Calculate</strong>.
 </div>
 
+
 <script>
-// Toggle mode UI
+/* --------------------------------------------------------------------------
+   ISO PAGE PRESETS & ORIENTATION
+-------------------------------------------------------------------------- */
+
+const A_SIZES = {
+  A0: { w: 841, h: 1189 },
+  A1: { w: 594, h: 841 },
+  A2: { w: 420, h: 594 },
+  A3: { w: 297, h: 420 },
+  A4: { w: 210, h: 297 },
+  A5: { w: 148, h: 210 },
+  A6: { w: 105, h: 148 },
+};
+
+let currentOrientation = "portrait";
+
+function applyPreset(size) {
+  const s = A_SIZES[size];
+
+  if (currentOrientation === "portrait") {
+    document.getElementById("pageWidthMM").value = s.w;
+    document.getElementById("pageHeightMM").value = s.h;
+  } else {
+    document.getElementById("pageWidthMM").value = s.h;
+    document.getElementById("pageHeightMM").value = s.w;
+  }
+}
+
+function setOrientation(orientation) {
+  currentOrientation = orientation;
+
+  document.getElementById("portraitBtn").classList.toggle("active", orientation === "portrait");
+  document.getElementById("landscapeBtn").classList.toggle("active", orientation === "landscape");
+
+  // Swap values when toggled
+  const width = document.getElementById("pageWidthMM").value;
+  const height = document.getElementById("pageHeightMM").value;
+  document.getElementById("pageWidthMM").value = height;
+  document.getElementById("pageHeightMM").value = width;
+}
+
+
+/* --------------------------------------------------------------------------
+   MODE SWITCHING
+-------------------------------------------------------------------------- */
+
 document.querySelectorAll("input[name='mode']").forEach(radio => {
   radio.addEventListener("change", () => {
     const mode = document.querySelector("input[name='mode']:checked").value;
-
     document.getElementById("baselineSection").style.display =
       mode === "baseline" ? "block" : "none";
-
     document.getElementById("squareSection").style.display =
       mode === "square" ? "block" : "none";
-
-    document.getElementById("output").innerHTML =
-      "Enter values and click <strong>Calculate</strong>.";
   });
 });
 
-function calculate() {
-  const mode = document.querySelector("input[name='mode']:checked").value;
 
+/* --------------------------------------------------------------------------
+   MAIN CALCULATION
+-------------------------------------------------------------------------- */
+
+function calculate() {
   const mmToPt = 72 / 25.4;
   const ptToMm = 25.4 / 72;
-  const gutterPtToMm = 0.352778;
+  const ptToMM = 0.352778;
 
-  /* ------------------------------ BASELINE MODE ------------------------------- */
+  // PAGE + MARGINS
+  const W_mm = parseFloat(document.getElementById("pageWidthMM").value);
+  const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
+
+  const M_top = parseFloat(document.getElementById("marginTop").value);
+  const M_bottom = parseFloat(document.getElementById("marginBottom").value);
+  const M_inside = parseFloat(document.getElementById("marginInside").value);
+  const M_outside = parseFloat(document.getElementById("marginOutside").value);
+
+  const W_active = W_mm - (M_inside + M_outside);
+  const H_active = H_mm - (M_top + M_bottom);
+
+  document.getElementById("activeArea").innerHTML = `
+    <strong>Active width:</strong> ${W_active.toFixed(2)} mm<br>
+    <strong>Active height:</strong> ${H_active.toFixed(2)} mm
+  `;
+
+  const mode = document.querySelector("input[name='mode']:checked").value;
+
+
+  /* ------------------------- BASELINE GRID MODE ---------------------------- */
+
   if (mode === "baseline") {
-    const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
-    const B = parseFloat(document.getElementById("baseline").value);
-    const N = parseInt(document.getElementById("rows").value);
-    const G = parseFloat(document.getElementById("gutter").value);
+    const baseline = parseFloat(document.getElementById("baseline").value);
+    const rows = parseInt(document.getElementById("rowsBaseline").value);
+    const gutterPt = parseFloat(document.getElementById("gutterBaseline").value);
 
-    const H = H_mm * mmToPt;
+    const H_pt = H_active * mmToPt;
 
-    const k = Math.floor((H - (N - 1) * G) / (N * B));
-    const moduleHeight = k * B;
-    const liveArea = (N * moduleHeight) + ((N - 1) * G);
-    const leftover = H - liveArea;
+    const k = Math.floor((H_pt - (rows - 1) * gutterPt) / (rows * baseline));
+    const modulePt = k * baseline;
 
-    const outputHTML = `
+    const usedPt = rows * modulePt + (rows - 1) * gutterPt;
+    const leftoverPt = H_pt - usedPt;
+
+    document.getElementById("output").innerHTML = `
       <h2>Baseline Grid Results</h2>
-      <p><strong>Baselines per module (k):</strong> ${k}</p>
-      <p><strong>Module height:</strong> ${moduleHeight.toFixed(2)} pt (${(moduleHeight * ptToMm).toFixed(2)} mm)</p>
-      <p><strong>Live area:</strong> ${liveArea.toFixed(2)} pt (${(liveArea * ptToMm).toFixed(2)} mm)</p>
-      <p><strong>Leftover:</strong> ${leftover.toFixed(2)} pt (${(leftover * ptToMm).toFixed(2)} mm)</p>
+      <p><strong>Baselines per module:</strong> ${k}</p>
+      <p><strong>Module height:</strong> ${modulePt.toFixed(2)} pt (${(modulePt * ptToMm).toFixed(2)} mm)</p>
+      <p><strong>Used height:</strong> ${usedPt.toFixed(2)} pt (${(usedPt * ptToMm).toFixed(2)} mm)</p>
+      <p><strong>Leftover:</strong> ${leftoverPt.toFixed(2)} pt (${(leftoverPt * ptToMm).toFixed(2)} mm)</p>
     `;
-    document.getElementById("output").innerHTML = outputHTML;
   }
 
-  /* ------------------------------ SQUARE MODE ------------------------------- */
+
+  /* ------------------------- SQUARE GRID MODE ------------------------------ */
+
   if (mode === "square") {
-    const W_mm = parseFloat(document.getElementById("pageWidthMM").value);
-    const H_mm = parseFloat(document.getElementById("pageHeightSquareMM").value);
-    const M_mm = parseFloat(document.getElementById("marginMM").value);
-    const C = parseInt(document.getElementById("columns").value);
-    const R = parseInt(document.getElementById("rowsSquare").value);
-    const G_pt = parseFloat(document.getElementById("gutterSquare").value);
+    const columns = parseInt(document.getElementById("columns").value);
+    const rows = parseInt(document.getElementById("rowsSquare").value);
+    const gutterPt = parseFloat(document.getElementById("gutterSquare").value);
 
-    const gutterMM = G_pt * gutterPtToMm;
+    const gutterMM = gutterPt * ptToMM;
 
-    const W_live = W_mm - 2 * M_mm;
-    const H_live = H_mm - 2 * M_mm;
+    const moduleW = (W_active - (columns - 1) * gutterMM) / columns;
+    const moduleH = moduleW;
 
-    const moduleWidthMM = (W_live - (C - 1) * gutterMM) / C;
-    const moduleHeightMM = moduleWidthMM;
+    const requiredHeight = rows * moduleH + (rows - 1) * gutterMM;
 
-    const requiredHeightMM =
-      (R * moduleHeightMM) + ((R - 1) * gutterMM);
+    const fits = requiredHeight <= H_active
+      ? "✔ Fits within the active area"
+      : "✖ Too tall — reduce rows or increase margins";
 
-    const fits = requiredHeightMM <= H_live
-      ? "✔ Fits inside margins"
-      : "✖ Does NOT fit (grid too tall for live area)";
-
-    const outputHTML = `
-      <h2>Square Modules Results</h2>
-      <p><strong>Live area:</strong> ${W_live.toFixed(2)} × ${H_live.toFixed(2)} mm</p>
-      <p><strong>Module width:</strong> ${moduleWidthMM.toFixed(2)} mm (${(moduleWidthMM * mmToPt).toFixed(2)} pt)</p>
-      <p><strong>Module height:</strong> ${moduleHeightMM.toFixed(2)} mm (${(moduleHeightMM * mmToPt).toFixed(2)} pt)</p>
-      <p><strong>Required height for ${R} rows:</strong> ${requiredHeightMM.toFixed(2)} mm</p>
+    document.getElementById("output").innerHTML = `
+      <h2>Square Grid Results</h2>
+      <p><strong>Module width/height:</strong> ${moduleW.toFixed(2)} mm (${(moduleW * mmToPt).toFixed(2)} pt)</p>
+      <p><strong>Required height:</strong> ${requiredHeight.toFixed(2)} mm</p>
+      <p><strong>Active height:</strong> ${H_active.toFixed(2)} mm</p>
       <p><strong>Status:</strong> ${fits}</p>
     `;
-
-    document.getElementById("output").innerHTML = outputHTML;
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   MAX ROWS FOR SQUARE MODE
+-------------------------------------------------------------------------- */
+
+function setMaxRows() {
+  const ptToMM = 0.352778;
+
+  const W_mm = parseFloat(document.getElementById("pageWidthMM").value);
+  const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
+
+  const M_top = parseFloat(document.getElementById("marginTop").value);
+  const M_bottom = parseFloat(document.getElementById("marginBottom").value);
+  const M_inside = parseFloat(document.getElementById("marginInside").value);
+  const M_outside = parseFloat(document.getElementById("marginOutside").value);
+
+  const W_active = W_mm - (M_inside + M_outside);
+  const H_active = H_mm - (M_top + M_bottom);
+
+  const columns = parseInt(document.getElementById("columns").value);
+  const gutterPt = parseFloat(document.getElementById("gutterSquare").value);
+
+  const gutterMM = gutterPt * ptToMM;
+
+  // module size
+  const moduleW = (W_active - (columns - 1) * gutterMM) / columns;
+  const moduleH = moduleW;
+
+  // calculate max rows
+  const maxRows = Math.floor((H_active + gutterMM) / (moduleH + gutterMM));
+
+  document.getElementById("rowsSquare").value = maxRows;
+
+  // auto-calc after setting rows
+  calculate();
+}
+
 </script>
 
 </body>

@@ -46,7 +46,7 @@ input {
 }
 
 /* ---------------------------
-   Layout
+   Layout (Swiss Grid)
 ---------------------------- */
 .layout {
     display: flex;
@@ -59,7 +59,7 @@ input {
 }
 
 /* ---------------------------
-   Button — Black/White
+   Button — Black/White (Swiss)
 ---------------------------- */
 button {
     background: #000;
@@ -130,7 +130,7 @@ button:hover {
 <h1>Modular Grid Calculator</h1>
 <p>
 A baseline-driven calculator for designing modular text systems.
-Define your baseline increment, number of modules, and lines per module to determine text-block heights.
+Define your baseline increment, number of modules, and lines per module to calculate text-block heights.
 Use the remaining space to create margins in your layout.
 </p>
 
@@ -191,7 +191,7 @@ function calculate() {
     const modules = parseFloat(document.getElementById('modules').value);
     const linesPerModule = parseFloat(document.getElementById('linesPerModule').value);
 
-    // pt → mm (internal only)
+    // Convert pt → mm internally
     const baselineMM = baselinePt * 0.352778;
 
     const moduleHeight = linesPerModule * baselineMM;
@@ -211,14 +211,24 @@ function calculate() {
     freeSpaceEl.textContent =
         "Remaining free space for margins: " + freeSpace.toFixed(2) + " mm";
 
-    // Make free space turn red if negative
+    const resultsBox = document.getElementById('results');
+
+    // -------------------------------
+    // WCAG-Compliant Warning State
+    // -------------------------------
     if (freeSpace < 0) {
-        freeSpaceEl.style.color = "#b30000"; // Swiss red
+        freeSpaceEl.style.color = "#D4351C";           // accessible error red
+        resultsBox.style.background = "#FEE7E6";       // accessible background
+        resultsBox.style.borderColor = "#D4351C";       // visible red border
+        resultsBox.style.borderWidth = "2px";
     } else {
-        freeSpaceEl.style.color = "#000"; // black
+        freeSpaceEl.style.color = "#000";
+        resultsBox.style.background = "#f3f3f3";
+        resultsBox.style.borderColor = "#000";
+        resultsBox.style.borderWidth = "1px";
     }
 
-    document.getElementById('results').style.display = "block";
+    resultsBox.style.display = "block";
 }
 </script>
 

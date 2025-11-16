@@ -2,164 +2,109 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Baseline Grid Calculator</title>
-
+<title>Modular Grid Calculator</title>
 <style>
-  body {
-    font-family: system-ui, -apple-system, Helvetica, Arial, sans-serif;
-    margin: 0px;
-    padding: 2rem;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    background: #ffffff;
-    color: #111;
-    line-height: 1.6;
-  }
-
-  h1, h2 { line-height: 1.2; margin-top: 0; }
-
-  .field-group {
-    margin-bottom: 1.2rem;
-  }
-
-  label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.3rem;
-  }
-
-  input {
-    width: 100%;
-    max-width: 240px;
-    padding: 0.55rem 0.75rem;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  button {
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background: #222;
-    color: #fff;
-    margin-top: 0.5rem;
-  }
-
-  .output {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    border-radius: 6px;
-    background: #f7f7f7;
-    border: 1px solid #ddd;
-  }
-
-  /* Responsive stack */
-  @media (max-width: 600px) {
-  body { 
-    padding: 1.25rem 1.75rem 1.25rem 1.5rem;
-    /*   top   right   bottom   left    */
-  }
-  .output {
-    padding: 1.25rem;
-  }
-  input {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  }
+    body {
+        font-family: system-ui, sans-serif;
+        max-width: 760px;
+        margin: 40px auto;
+        padding: 0 20px;
+        line-height: 1.5;
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .field {
+        margin-bottom: 1.2rem;
+    }
+    label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    input {
+        width: 150px;
+        padding: 6px;
+        font-size: 1rem;
+    }
+    .output-box {
+        background: #f7f7f7;
+        border-radius: 6px;
+        padding: 16px;
+        margin-top: 24px;
+    }
+    .output-line { margin: 6px 0; }
 </style>
 </head>
-
-
-<script>
-function resizeParent() {
-  const height = document.documentElement.scrollHeight;
-  window.parent.postMessage({ frameHeight: height }, "*");
-}
-window.onload = resizeParent;
-window.onresize = resizeParent;
-
-// Re-run after calculation
-setInterval(resizeParent, 300);
-</script>
-
-
 
 <body>
 
 <h1>Modular Grid Calculator</h1>
-<p>Enter your page height in <strong>millimetres</strong>. The calculator converts internally to points (1 mm = 2.83465 pt) so the results lock cleanly to a 12 pt baseline grid.</p>
+<p>
+A simple calculator for determining modular text block heights using a baseline-driven grid. 
+This helps you size text beds first, and then position them to create margins in InDesign.
+</p>
 
-<h2>Inputs</h2>
-
-<div class="field-group">
-  <label>Page height (mm)</label>
-  <input type="number" id="pageHeightMM" value="297" step="0.01">
+<div class="field">
+    <label for="pageHeight">Page height (mm)</label>
+    <input type="number" id="pageHeight" value="297">
 </div>
 
-<div class="field-group">
-  <label>Baseline increment (pt)</label>
-  <input type="number" id="baseline" value="12" step="0.01">
+<div class="field">
+    <label for="baselinePt">Baseline increment (pt)</label>
+    <input type="number" id="baselinePt" value="12">
 </div>
 
-<div class="field-group">
-  <label>Number of modules (rows)</label>
-  <input type="number" id="rows" value="6" step="1">
+<div class="field">
+    <label for="modules">Number of modules (rows)</label>
+    <input type="number" id="modules" value="6">
 </div>
 
-<div class="field-group">
-  <label>Gutter height (pt)</label>
-  <input type="number" id="gutter" value="12" step="0.01">
+<div class="field">
+    <label for="linesPerModule">Lines per module</label>
+    <input type="number" id="linesPerModule" value="10">
 </div>
 
 <button onclick="calculate()">Calculate</button>
 
-<div id="output" class="output">
-  Enter values and click <strong>Calculate</strong>.
+<div id="results" class="output-box" style="display:none;">
+    <h2>Results</h2>
+    <div class="output-line" id="baselineMM"></div>
+    <div class="output-line" id="moduleHeight"></div>
+    <div class="output-line" id="totalGridHeight"></div>
+    <div class="output-line" id="freeSpace"></div>
 </div>
 
 <script>
 function calculate() {
-  const mmToPt = 72 / 25.4;
-  const ptToMm = 25.4 / 72;
+    const pageHeight = parseFloat(document.getElementById('pageHeight').value);
+    const baselinePt = parseFloat(document.getElementById('baselinePt').value);
+    const modules = parseFloat(document.getElementById('modules').value);
+    const linesPerModule = parseFloat(document.getElementById('linesPerModule').value);
 
-  const H_mm = parseFloat(document.getElementById("pageHeightMM").value);
-  const B = parseFloat(document.getElementById("baseline").value);
-  const N = parseInt(document.getElementById("rows").value);
-  const G = parseFloat(document.getElementById("gutter").value);
+    // Convert pt → mm (quietly, only for internal maths)
+    const baselineMM = baselinePt * 0.352778;
 
-  if (isNaN(H_mm) || isNaN(B) || isNaN(N) || isNaN(G) || N <= 0) {
-    document.getElementById("output").innerHTML = "<p>Please enter valid numeric values.</p>";
-    return;
-  }
+    // Module height in mm
+    const moduleHeight = linesPerModule * baselineMM;
 
-  // Convert mm → pt
-  const H = H_mm * mmToPt;
+    // Total grid height
+    const totalGridHeight = moduleHeight * modules;
 
-  // Baseline grid logic
-  const k = Math.floor((H - (N - 1) * G) / (N * B));
-  const moduleHeight = k * B;
-  const liveArea = N * moduleHeight + (N - 1) * G;
-  const leftover = H - liveArea;
+    // Free space (designer can use for margins)
+    const freeSpace = pageHeight - totalGridHeight;
 
-  const moduleHeightMM = (moduleHeight * ptToMm).toFixed(2);
-  const liveAreaMM = (liveArea * ptToMm).toFixed(2);
-  const leftoverMM = (leftover * ptToMm).toFixed(2);
+    document.getElementById('baselineMM').textContent =
+        "Baseline increment: " + baselinePt + " pt";
 
-  document.getElementById("output").innerHTML = `
-    <h2>Results</h2>
-    <p><strong>Baselines per module (k):</strong> ${k}</p>
-    <p><strong>Module height:</strong> ${moduleHeight.toFixed(2)} pt (${moduleHeightMM} mm)</p>
-    <p><strong>Live area used:</strong> ${liveArea.toFixed(2)} pt (${liveAreaMM} mm)</p>
-    <p><strong>Leftover for margins:</strong> ${leftover.toFixed(2)} pt (${leftoverMM} mm total)</p>
-    <p style="margin-top:1rem;"><em>Tip:</em> Divide leftover by two for top and bottom margins, or split however your layout requires.</p>
-  `;
+    document.getElementById('moduleHeight').textContent =
+        "Module height: " + moduleHeight.toFixed(2) + " mm";
+
+    document.getElementById('totalGridHeight').textContent =
+        "Total grid height: " + totalGridHeight.toFixed(2) + " mm";
+
+    document.getElementById('freeSpace').textContent =
+        "Remaining free space for margins: " + freeSpace.toFixed(2) + " mm";
+
+    document.getElementById('results').style.display = "block";
 }
 </script>
 

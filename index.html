@@ -3,75 +3,185 @@
 <head>
 <meta charset="UTF-8">
 <title>Modular Grid Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
+
+/* ---------------------------
+   Typography (Swiss Style)
+---------------------------- */
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 40px auto;
+    max-width: 960px;
+    padding: 0 24px;
+    line-height: 1.5;
+    color: #000;
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+h2 {
+    font-size: 18px;
+    margin-top: 0;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 16px;
+}
+
+input {
+    width: 160px;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #000;
+    background: #fff;
+}
+
+/* ---------------------------
+   Layout
+---------------------------- */
+.layout {
+    display: flex;
+    gap: 40px;
+    margin-top: 32px;
+}
+
+.column {
+    flex: 1;
+}
+
+/* ---------------------------
+   Button (Black / White)
+---------------------------- */
+button {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+button:hover {
+    background: #111;
+}
+
+/* ---------------------------
+   Output Box
+---------------------------- */
+.output-box {
+    background: #f3f3f3;
+    border: 1px solid #000;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.output-line {
+    margin: 6px 0;
+    font-size: 16px;
+}
+
+/* ---------------------------
+   Mobile
+---------------------------- */
+@media (max-width: 700px) {
+
     body {
-        font-family: system-ui, sans-serif;
-        max-width: 760px;
-        margin: 40px auto;
-        padding: 0 20px;
-        line-height: 1.5;
+        padding: 0 16px;
     }
-    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
-    .field {
-        margin-bottom: 1.2rem;
-    }
-    label {
+
+    .layout {
         display: block;
-        font-weight: 600;
-        margin-bottom: 4px;
     }
+
     input {
-        width: 150px;
-        padding: 6px;
-        font-size: 1rem;
+        width: 100%;
+        max-width: 240px;
     }
-    .output-box {
-        background: #f7f7f7;
-        border-radius: 6px;
-        padding: 16px;
-        margin-top: 24px;
+
+    .column {
+        width: 100%;
+        margin-bottom: 32px;
     }
-    .output-line { margin: 6px 0; }
+
+    h1 {
+        font-size: 22px;
+    }
+}
+
 </style>
 </head>
+
 
 <body>
 
 <h1>Modular Grid Calculator</h1>
 <p>
-A simple calculator for determining modular text block heights using a baseline-driven grid. 
-This helps you size text beds first, and then position them to create margins in InDesign.
+A baseline-driven calculator for designing modular text systems. 
+Define your baseline increment, number of modules, and lines per module to calculate text-block heights. 
+Use the remaining space to create margins in your layout.
 </p>
 
-<div class="field">
-    <label for="pageHeight">Page height (mm)</label>
-    <input type="number" id="pageHeight" value="297">
+<div class="layout">
+
+    <!-- =======================
+         LEFT COLUMN — INPUTS
+    ======================== -->
+    <div class="column">
+
+        <label for="pageHeight">Page height (mm)</label>
+        <input type="number" id="pageHeight" value="297">
+
+        <br><br>
+
+        <label for="baselinePt">Baseline increment (pt)</label>
+        <input type="number" id="baselinePt" value="12">
+
+        <br><br>
+
+        <label for="modules">Number of modules (rows)</label>
+        <input type="number" id="modules" value="6">
+
+        <br><br>
+
+        <label for="linesPerModule">Lines per module</label>
+        <input type="number" id="linesPerModule" value="10">
+
+        <br><br>
+
+        <button onclick="calculate()">Calculate</button>
+
+    </div>
+
+
+    <!-- =======================
+         RIGHT COLUMN — RESULTS
+    ======================== -->
+    <div class="column">
+
+        <div id="results" class="output-box" style="display:none;">
+            <h2>Results</h2>
+            <div class="output-line" id="baselineMM"></div>
+            <div class="output-line" id="moduleHeight"></div>
+            <div class="output-line" id="totalGridHeight"></div>
+            <div class="output-line" id="freeSpace"></div>
+        </div>
+
+    </div>
+
 </div>
 
-<div class="field">
-    <label for="baselinePt">Baseline increment (pt)</label>
-    <input type="number" id="baselinePt" value="12">
-</div>
-
-<div class="field">
-    <label for="modules">Number of modules (rows)</label>
-    <input type="number" id="modules" value="6">
-</div>
-
-<div class="field">
-    <label for="linesPerModule">Lines per module</label>
-    <input type="number" id="linesPerModule" value="10">
-</div>
-
-<button onclick="calculate()">Calculate</button>
-
-<div id="results" class="output-box" style="display:none;">
-    <h2>Results</h2>
-    <div class="output-line" id="baselineMM"></div>
-    <div class="output-line" id="moduleHeight"></div>
-    <div class="output-line" id="totalGridHeight"></div>
-    <div class="output-line" id="freeSpace"></div>
-</div>
 
 <script>
 function calculate() {
@@ -80,16 +190,12 @@ function calculate() {
     const modules = parseFloat(document.getElementById('modules').value);
     const linesPerModule = parseFloat(document.getElementById('linesPerModule').value);
 
-    // Convert pt → mm (quietly, only for internal maths)
+    // pt → mm (quiet math only)
     const baselineMM = baselinePt * 0.352778;
 
-    // Module height in mm
     const moduleHeight = linesPerModule * baselineMM;
-
-    // Total grid height
     const totalGridHeight = moduleHeight * modules;
 
-    // Free space (designer can use for margins)
     const freeSpace = pageHeight - totalGridHeight;
 
     document.getElementById('baselineMM').textContent =

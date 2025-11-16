@@ -8,7 +8,7 @@
 <style>
 
 /* ---------------------------
-   Typography (Swiss Style)
+   Typography — Swiss Style
 ---------------------------- */
 body {
     font-family: Helvetica, Arial, sans-serif;
@@ -59,7 +59,7 @@ input {
 }
 
 /* ---------------------------
-   Button (Black / White)
+   Button — Black/White
 ---------------------------- */
 button {
     background: #000;
@@ -90,10 +90,11 @@ button:hover {
 .output-line {
     margin: 6px 0;
     font-size: 16px;
+    color: #000;
 }
 
 /* ---------------------------
-   Mobile
+   Mobile Styles
 ---------------------------- */
 @media (max-width: 700px) {
 
@@ -107,7 +108,7 @@ button:hover {
 
     input {
         width: 100%;
-        max-width: 240px;
+        max-width: 260px;
     }
 
     .column {
@@ -128,8 +129,8 @@ button:hover {
 
 <h1>Modular Grid Calculator</h1>
 <p>
-A baseline-driven calculator for designing modular text systems. 
-Define your baseline increment, number of modules, and lines per module to calculate text-block heights. 
+A baseline-driven calculator for designing modular text systems.
+Define your baseline increment, number of modules, and lines per module to determine text-block heights.
 Use the remaining space to create margins in your layout.
 </p>
 
@@ -190,12 +191,11 @@ function calculate() {
     const modules = parseFloat(document.getElementById('modules').value);
     const linesPerModule = parseFloat(document.getElementById('linesPerModule').value);
 
-    // pt → mm (quiet math only)
+    // pt → mm (internal only)
     const baselineMM = baselinePt * 0.352778;
 
     const moduleHeight = linesPerModule * baselineMM;
     const totalGridHeight = moduleHeight * modules;
-
     const freeSpace = pageHeight - totalGridHeight;
 
     document.getElementById('baselineMM').textContent =
@@ -207,8 +207,16 @@ function calculate() {
     document.getElementById('totalGridHeight').textContent =
         "Total grid height: " + totalGridHeight.toFixed(2) + " mm";
 
-    document.getElementById('freeSpace').textContent =
+    const freeSpaceEl = document.getElementById('freeSpace');
+    freeSpaceEl.textContent =
         "Remaining free space for margins: " + freeSpace.toFixed(2) + " mm";
+
+    // Make free space turn red if negative
+    if (freeSpace < 0) {
+        freeSpaceEl.style.color = "#b30000"; // Swiss red
+    } else {
+        freeSpaceEl.style.color = "#000"; // black
+    }
 
     document.getElementById('results').style.display = "block";
 }
